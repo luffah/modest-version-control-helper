@@ -1,0 +1,41 @@
+*mvch.vim*     " mvch.vim -- add simple tools to compare versions of a repository
+                                               *modest-version-control-helper*
+==============================================================================
+CONTENTS                              *modest-version-control-helper-contents*
+
+1. Commands                           |modest-version-control-helper-commands|
+2. Keymappings                        |modest-version-control-helper-mappings|
+
+==============================================================================
+COMMANDS                              *modest-version-control-helper-commands*
+
+*AnnotateSplit*
+    Open a pane indicating <user, commit, date> for each line
+
+*DiffRev*
+    Open split containing diff from previous version
+
+
+==============================================================================
+KEYMAPPINGS                           *modest-version-control-helper-mappings*
+
+*q*
+    In annotation & diff pane, close.
+
+*d*
+    In annotation pane, show diff since revision under cursor (current file).
+
+*p*
+    In annotation pane, show patch associated to the changeset.
+    
+
+*N*
+    In annotation pane, jump to previous line with same commit.
+
+*Enter*
+    In annotation pane, show commit message
+
+*v*
+    In annotation pane, show detailled commit (changeset, files...)
+
+vim:tw=78:ts=8:ft=help:norl:
