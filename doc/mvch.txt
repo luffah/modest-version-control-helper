@@ -19,6 +19,9 @@ COMMANDS                              *modest-version-control-helper-commands*
 ==============================================================================
 KEYMAPPINGS                           *modest-version-control-helper-mappings*
 
+*F1*
+    Short help
+
 *q*
     In annotation & diff pane, close.
 

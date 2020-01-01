@@ -48,11 +48,12 @@ endfu
 " expected format is : name commit date: line
 " to format names
 let s:_spaces='                                                '
-let s:_format='s/^\([0-9A-Za-z -]\{10\}\)[0-9A-Za-z-]*\s*/\1 /g'
+let s:_commitid='\([0-9A-Za-z -]\{10\}\)'
+let s:_format='s/^'.s:_commitid.'[0-9A-Za-z-]*\s*/\1 /g;s/'.s:_spaces.'.*//'
 " command to get annotation for each vcs
 let s:vcs_annotate={
       \'hg': 'hg annotate -n -u -d -q %s',
-      \'git': 'git annotate %s | sed ''s/^\([0-9a-z]\+\)\s*(\s*\([0-9A-Za-z -]\+[0-9a-z]\+\)\s*\(([^)]*)\)\?\s*\s\+\([0-9-]\{10\}\)\s[^)]\+)\(.*\)$/\2'.s:_spaces.'\1 \4: \5/;'.s:_format.'''',
+      \'git': 'git annotate %s | sed ''s/^\([0-9a-z]\+\)\s*(\s*\([0-9A-Za-z -]\+[0-9a-z]\+\)\s*\(([^)]*)\)\?\s*\s\+'.s:_commitid.'\s[^)]\+)\(.*\)$/\2'.s:_spaces.'\1 \4: \5/;'.s:_format.'''',
       \}
 
 let s:vcs_commit_msg={
@@ -131,17 +132,20 @@ fu! s:AnnotateSplit()
       let l:panebuf=bufnr('%')
       map <buffer> q <ESC>:q<CR>
       hi def link AnnotateCurrentCommit LineNr
-      
+
       exe 'au QuitPre,BufWinLeave <buffer> silent! bd '.l:panebuf
       au BufEnter,CursorMoved <buffer> silent! syn clear AnnotateCurrentCommit
-            \ | let b:_cur_line=split(getline('.'),':')[0]
-            \ | exe "syn match AnnotateCurrentCommit '".b:_cur_line."'"
+        \ | let b:_cur_line=split(getline('.'),':')[0]
+        \ | exe "syn match AnnotateCurrentCommit '".b:_cur_line."'"
       map <buffer> <Cr> :call <SID>echo_commit_msg(split(b:_cur_line, ' ')[-2])<CR>
       map <buffer> v :call <SID>echo_commit_msg(split(b:_cur_line, ' ')[-2], 'detailled')<CR>
       map <buffer> p :call <SID>show(split(b:_cur_line, ' ')[-2], 'patch')<CR>
       map <buffer> d :call <SID>show(split(b:_cur_line, ' ')[-2], 'diff')<CR>
       map <buffer> n :silent! call search(b:_cur_line)<CR>
       map <buffer> N :silent! call search(b:_cur_line, 'b')<CR>
+      " TODO
+      " map <buffer> <C-n> :silent! call <SID>next_commit(b:_cur_line)<CR>
+      " map <buffer> <C-p> :silent! call <SID>next_commit(-1)<CR>
       map <buffer> <F1> :echo "Enter: show message\nv : show detailled message\np : show patch\nd : show diff\nn/N : next/previous change related to the commit\nq: close"<CR>
       let b:_vcs=l:vcs
       let b:_vcs_source_winid=l:win
@@ -149,8 +153,10 @@ fu! s:AnnotateSplit()
       let b:_vcs_root=l:vcs_root
       setlocal cursorline nowrap
       setlocal buftype=nofile
+      setlocal nobuflisted
 
-      exe 'file '.l:name.' Annotations['.l:vcs.'] (F1 : short help)'
+      exe 'file '.l:name.' Annotations['.l:vcs.']'
+      exe 'setlocal statusline=Annotations\ (F1\ =\ help)'
       setlocal listchars=nbsp:¤
       exe 'read !cd '.l:pathdir.'; '.printf(s:vcs_annotate[l:vcs], l:path)
       0delete
@@ -158,10 +164,11 @@ fu! s:AnnotateSplit()
       %s/:.*//
       exe 'vertical resize '.l:width
       call execute(l:line)
-      set cursorbind
+      set cursorbind scrollbind scrollopt=hor
       call win_gotoid(l:win)
       exe 'au QuitPre,BufWinLeave,BufUnload,BufHidden <buffer> silent! set nocursorbind | silent! bd! '.l:panebuf
-      set cursorbind
+      call execute(l:line)
+      set cursorbind scrollbind scrollopt=hor
     endtry
   endif
 endfu
@@ -187,7 +194,8 @@ fu! s:DiffSplit(rev)
       let l:panebuf=bufnr('%')
       map <buffer> q <ESC>:q<CR>
       exe 'au QuitPre,BufWinLeave <buffer> silent! bd '.l:panebuf
-      exe 'file '.l:name.' Diff['.l:vcs.'] '.l:rev.' (q : close)'
+      exe 'file '.l:name.' Diff['.l:vcs.'] '.l:rev
+      exe 'setlocal statusline='.l:name.'\ '.l:rev.'\ (q\ =\ quit)'
       exe 'read !cd '.l:pathdir.'; '.printf(s:vcs_cat[l:vcs], l:rev, l:path)
       0delete
       set buftype=nofile
