@@ -57,12 +57,12 @@ let s:vcs_annotate={
 
 let s:vcs_commit_msg={
       \'hg': 'hg log -T {desc} -r %s',
-      \'git': 'git log --format %%B %s',
+      \'git': 'git log -1 --format=%%B %s',
       \}
 
 let s:vcs_detailled_commit_msg={
       \'hg': 'hg log -C -v -r %s',
-      \'git': 'git log %s',
+      \'git': 'git log -1 %s',
       \}
 
 let s:vcs_patch={
@@ -142,6 +142,7 @@ fu! s:AnnotateSplit()
       map <buffer> d :call <SID>show(split(b:_cur_line, ' ')[-2], 'diff')<CR>
       map <buffer> n :silent! call search(b:_cur_line)<CR>
       map <buffer> N :silent! call search(b:_cur_line, 'b')<CR>
+      map <buffer> <F1> :echo "Enter: show message\nv : show detailled message\np : show patch\nd : show diff\nn/N : next/previous change related to the commit\nq: close"<CR>
       let b:_vcs=l:vcs
       let b:_vcs_source_winid=l:win
       let b:_vcs_source_path=l:path
@@ -149,7 +150,7 @@ fu! s:AnnotateSplit()
       setlocal cursorline nowrap
       setlocal buftype=nofile
 
-      exe 'file '.l:name.' Annotations['.l:vcs.']'
+      exe 'file '.l:name.' Annotations['.l:vcs.'] (F1 : short help)'
       setlocal listchars=nbsp:¤
       exe 'read !cd '.l:pathdir.'; '.printf(s:vcs_annotate[l:vcs], l:path)
       0delete
@@ -173,6 +174,7 @@ fu! s:DiffSplit(rev)
       let l:win=win_getid(winnr())
       let l:line=line('.')
       let l:path=expand('%:p')
+      let l:path = substitute(l:path, l:vcs_root.'/', '','')
       let l:name=expand('%:t')
       let l:pathdir=expand('%:p:h')
       let l:rev=a:rev
@@ -185,7 +187,7 @@ fu! s:DiffSplit(rev)
       let l:panebuf=bufnr('%')
       map <buffer> q <ESC>:q<CR>
       exe 'au QuitPre,BufWinLeave <buffer> silent! bd '.l:panebuf
-      exe 'file '.l:name.' Diff['.l:vcs.'] '.l:rev
+      exe 'file '.l:name.' Diff['.l:vcs.'] '.l:rev.' (q : close)'
       exe 'read !cd '.l:pathdir.'; '.printf(s:vcs_cat[l:vcs], l:rev, l:path)
       0delete
       set buftype=nofile
@@ -197,6 +199,9 @@ fu! s:DiffSplit(rev)
     endtry
   endif
 endfu
+
+" @mapping F1
+" Short help
 
 " @mapping q
 " In annotation & diff pane, close.
